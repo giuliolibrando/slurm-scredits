@@ -52,7 +52,7 @@ Creating account `test_account`  with billing balance of 1000
 sacctmgr add account test_account set GrpTRESMins=billing=1000
 ```
 
-Add `test_user` user to account `tutorial`
+Add `test_user` user to account `test_account`
 ```
 sacctmgr add user test_user set Account=test_account
 ```
