@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=59.6"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "slurm-scredits"
+version = "1.0.0"
+authors = [
+  { name="Giulio Librando", email="giuliolibrando@gmail.com" },
+]
+description = "Slurm utility for checking account balance"
+readme = "README.md"
+requires-python = ">=3.6"
+classifiers = [
+    "Development Status :: 1 - Alpha",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/giuliolibrando/slurm-scredits/"
+"Bug Tracker" = "https://github.com/giuliolibrando/slurm-scredits/issues"
