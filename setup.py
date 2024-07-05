@@ -2,14 +2,26 @@ from setuptools import setup, find_packages
 
 setup(
     name='scredits',
-    version='1.0',
+    version='1.0.1',  # Incrementa la versione qui
     packages=find_packages(),
     install_requires=[
-        'pandas',  # Assicurati di elencare tutte le dipendenze necessarie
+        'pandas',
     ],
     entry_points={
         'console_scripts': [
-            'scredits = scredits.cli:main',
+            'scredits=scredits.cli:main',
         ],
     },
+    author='Giulio Librando',
+    author_email='giulio@example.com',
+    description='A tool to retrieve and display Slurm usage data',
+    long_description=open('README.md').read(),
+    long_description_content_type='text/markdown',
+    url='https://github.com/giulio/scredits',
+    classifiers=[
+        'Programming Language :: Python :: 3',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
+    ],
+    python_requires='>=3.6',
 )

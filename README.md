@@ -27,18 +27,10 @@ options:
 
 
 # Installation
-Clone the repo 
 ```
-git clone https://github.com/giuliolibrando/slurm-scredits.git
+pip install scredits
 ```
-enter into the folder
-```
-cd slurm-scredits
-```
-install via pip
-```
-pip install .
-```
+
 
 # Setting up Slurm
 `scredits` currently support the following setup. 
@@ -77,3 +69,25 @@ test_account         |                 |                 |                 |
                      | test_user       | 0               | 0.0%            | cpu=0, mem=0, gpu=0
 
 ```
+
+
+
+
+
+# Build yourself
+
+Clone the repo
+```
+git clone https://github.com/giuliolibrando/slurm-scredits.git
+```
+enter into the folder
+```
+cd slurm-scredits
+```
+install via pip
+```
+pip install .
+```
+
+
+https://pypi.org/project/scredits/1.0.1/
