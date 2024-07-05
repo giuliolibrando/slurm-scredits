@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='scredits',
-    version='1.0.1',  # Incrementa la versione qui
+    version='1.0.2',  # Incrementa la versione qui
     packages=find_packages(),
     install_requires=[
         'pandas',
@@ -13,11 +13,11 @@ setup(
         ],
     },
     author='Giulio Librando',
-    author_email='giulio@example.com',
+    author_email='giuliolibrando@gmail.com',
     description='A tool to retrieve and display Slurm usage data',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
-    url='https://github.com/giulio/scredits',
+    url='https://github.com/giuliolibrando/slurm-scredits',
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',
