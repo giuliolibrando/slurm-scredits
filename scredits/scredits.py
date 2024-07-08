@@ -21,7 +21,7 @@ def parse_sshare_output(output):
 
 def get_slurm_usage(verbose=False, version=False):
     if version:
-        print("scredits version 1.1.1 by Giulio Librando")
+        print("scredits version 1.1.2 by Giulio Librando")
         return None  # Restituisci None quando si richiede solo la versione
 
     # Esegui il comando sshare
@@ -67,6 +67,10 @@ def get_slurm_usage(verbose=False, version=False):
         print("Nessun dato disponibile.")
         return pd.DataFrame(columns=["Account", "User", "Allocation(SU)", "Remaining(SU)", "Used(SU)", "Used(%)"])
 
+import subprocess
+import pandas as pd
+import re
+
 def show_account_users(verbose=False):
     cmd = ['sshare', '-a', '-o', 'account,user,GrpTRESRaw,GrpTRESMins', '-P']
     if verbose:
@@ -80,6 +84,8 @@ def show_account_users(verbose=False):
     current_account = None
     account_billing_raw = 0
     account_billing_mins = 0
+    account_total_usage = 0
+    account_resources = {'cpu': 0, 'mem': 0, 'gpu': 0}
 
     for _, row in df.iterrows():
         account = row["Account"]
@@ -94,12 +100,21 @@ def show_account_users(verbose=False):
         total_su = int(mins_billing_raw.group(1)) if mins_billing_raw else 0
 
         if account != current_account:
-            if current_account and su_data:
-                su_data.append(["-" * 20, "-" * 15, "-" * 15, "-" * 15, "-" * 30])
+            if current_account:
+                if su_data:
+                    account_usage_percent = (account_total_usage / account_billing_mins) * 100 if account_billing_mins > 0 else 0
+                    print("-" * 90)
+                    su_data.append(" " * 21 + "-" * 69)
+                    su_data.append([
+                        "", "Total:", f"{account_total_usage}/{account_billing_mins}", f"{account_usage_percent:.2f}%",
+                        f"cpu={account_resources['cpu']}, mem={account_resources['mem']}, gpu={account_resources['gpu']}"
+                    ])
             su_data.append([account, "", "", "", ""])
             current_account = account
             account_billing_raw = 0
             account_billing_mins = total_su
+            account_total_usage = 0
+            account_resources = {'cpu': 0, 'mem': 0, 'gpu': 0}
 
         if user:
             if account_billing_mins > 0:
@@ -108,19 +123,44 @@ def show_account_users(verbose=False):
                 user_usage_percent = 0
 
             resources_used = extract_resources(grp_tres_raw)
+            resources_dict = {k: int(v) for k, v in re.findall(r'(\w+)=(\d+)', grp_tres_raw)}
+
+            for resource in ['cpu', 'mem', 'gpu']:
+                account_resources[resource] += resources_dict.get(resource, 0)
 
             su_data.append(["", user, su_value_raw, f"{user_usage_percent:.2f}%", resources_used])
+            account_total_usage += su_value_raw
 
+    if current_account and su_data:
+        account_usage_percent = (account_total_usage / account_billing_mins) * 100 if account_billing_mins > 0 else 0
+        su_data.append(" " * 21 + "-" * 69)
+        su_data.append([
+            "", "Total:", f"{account_total_usage}/{account_billing_mins}", f"{account_usage_percent:.2f}%",
+            f"cpu={account_resources['cpu']}, mem={account_resources['mem']}, gpu={account_resources['gpu']}"
+        ])
+
+    # Print the table with proper formatting
     print(f"{'Account':<20} | {'User':<15} | {'Consumed (SU)':<15} | {'% SU Usage':<15} | {'Used Resources':<30}")
     print("-" * 90)
     for row in su_data:
-        print(f"{row[0]:<20} | {row[1]:<15} | {row[2]:<15} | {row[3]:<15} | {row[4]:<30}")
-
+        if len(row) >= 5:
+            if row[0].startswith('-'):
+                print("-" * 90)
+            else:
+                print(f"{row[0]:<20} | {row[1]:<15} | {row[2]:<15} | {row[3]:<15} | {row[4]:<30}")
+            if row[1] == "Total:":
+                print("-" * 90)
+        else:
+            print(row)  # Print any rows that may have caused issues for debugging purposes
 
 def extract_resources(raw_usage):
     resources = re.findall(r'(\w+)=(\d+)', raw_usage)
     resources_str = ", ".join([f"{res[0]}={res[1]}" for res in resources if res[0] in ['cpu', 'mem', 'gpu']])
     return resources_str
+
+
+if __name__ == "__main__":
+    show_account_users(verbose=True)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Retrieve and display Slurm usage data.")
