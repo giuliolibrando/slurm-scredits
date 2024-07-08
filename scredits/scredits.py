@@ -21,7 +21,7 @@ def parse_sshare_output(output):
 
 def get_slurm_usage(verbose=False, version=False):
     if version:
-        print("sbalance version 1.0 by Giulio Librando")
+        print("sbalance version 1.1.0 by Giulio Librando")
         return None  # Restituisci None quando si richiede solo la versione
 
     # Esegui il comando sshare
@@ -78,8 +78,8 @@ def show_account_users(verbose=False):
 
     su_data = []
     current_account = None
-    account_billing_raw = None
-    account_billing_mins = None  # Memorizza il valore di billing per l'account corrente
+    account_billing_raw = 0
+    account_billing_mins = 0
 
     for _, row in df.iterrows():
         account = row["Account"]
@@ -90,31 +90,20 @@ def show_account_users(verbose=False):
         raw_billing_raw = re.search(r'billing=(\d+)', grp_tres_raw)
         mins_billing_raw = re.search(r'billing=(\d+)', grp_tres_mins)
 
-        if raw_billing_raw:
-            su_value_raw = int(raw_billing_raw.group(1))
-        else:
-            su_value_raw = 0
-
-        if mins_billing_raw:
-            total_su = int(mins_billing_raw.group(1))
-        else:
-            total_su = 0
+        su_value_raw = int(raw_billing_raw.group(1)) if raw_billing_raw else 0
+        total_su = int(mins_billing_raw.group(1)) if mins_billing_raw else 0
 
         if account != current_account:
-            if current_account:
-                # Aggiungi riga di separazione solo se abbiamo già aggiunto dati per l'account precedente
-                if su_data:
-                    su_data.append(["-" * 20, "-" * 15, "-" * 15, "-" * 15, "-" * 30])
+            if current_account and su_data:
+                su_data.append(["-" * 20, "-" * 15, "-" * 15, "-" * 15, "-" * 30])
             su_data.append([account, "", "", "", ""])
             current_account = account
-
-            # Calcola il valore di billing per l'account corrente
-            account_billing_raw = su_value_raw
+            account_billing_raw = 0
             account_billing_mins = total_su
 
         if user:
             if account_billing_mins > 0:
-                user_usage_percent = (account_billing_raw / account_billing_mins) * 100
+                user_usage_percent = (su_value_raw / account_billing_mins) * 100
             else:
                 user_usage_percent = 0
 
