@@ -21,7 +21,7 @@ def parse_sshare_output(output):
 
 def get_slurm_usage(verbose=False, version=False):
     if version:
-        print("sbalance version 1.1.0 by Giulio Librando")
+        print("scredits version 1.1.1 by Giulio Librando")
         return None  # Restituisci None quando si richiede solo la versione
 
     # Esegui il comando sshare
