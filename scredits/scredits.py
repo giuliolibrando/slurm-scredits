@@ -19,12 +19,12 @@ def parse_sshare_output(output):
     df = pd.DataFrame(data, columns=headers)
     return df
 
-def get_slurm_usage(verbose=False, version=False):
+def get_slurm_usage(verbose=False, version=False, account=None):
     if version:
-        print("scredits version 1.1.2 by Giulio Librando")
-        return None  # Restituisci None quando si richiede solo la versione
+        print("scredits version 1.2.0 by Giulio Librando")
+        return None  # Return None when only version is requested
 
-    # Esegui il comando sshare
+    # Execute sshare command
     cmd = ['sshare', '-o', 'account,user,GrpTRESRaw,GrpTRESMins', '-P']
     if verbose:
         print(f"Executing command: {' '.join(cmd)}")
@@ -35,8 +35,11 @@ def get_slurm_usage(verbose=False, version=False):
 
     accounts = []
     for _, row in df.iterrows():
-        account = row["Account"]
+        acc = row["Account"]
         user = row["User"]
+
+        if account and acc != account:
+            continue  # Skip if account is specified and does not match
 
         grp_tres_raw = row["GrpTRESRaw"]
         grp_tres_mins = row["GrpTRESMins"]
@@ -51,7 +54,7 @@ def get_slurm_usage(verbose=False, version=False):
             used_percent = (used_su / allocation_su) * 100 if allocation_su != 0 else 0
 
             accounts.append({
-                "Account": account,
+                "Account": acc,
                 "User": user,
                 "Allocation(SU)": allocation_su,
                 "Remaining(SU)": remaining_su,
@@ -64,14 +67,10 @@ def get_slurm_usage(verbose=False, version=False):
         result_df.set_index("Account", inplace=True)
         return result_df
     else:
-        print("Nessun dato disponibile.")
+        print(f"No data available for account '{account}'." if account else "No data available.")
         return pd.DataFrame(columns=["Account", "User", "Allocation(SU)", "Remaining(SU)", "Used(SU)", "Used(%)"])
 
-import subprocess
-import pandas as pd
-import re
-
-def show_account_users(verbose=False):
+def show_account_users(verbose=False, account=None):
     cmd = ['sshare', '-a', '-o', 'account,user,GrpTRESRaw,GrpTRESMins', '-P']
     if verbose:
         print(f"Executing command: {' '.join(cmd)}")
@@ -79,6 +78,11 @@ def show_account_users(verbose=False):
     output = result.stdout
 
     df = parse_sshare_output(output)
+
+    if account:
+        if account not in df['Account'].values:
+            print(f"The account '{account}' doesn't exists.")
+            return
 
     su_data = []
     current_account = None
@@ -88,10 +92,13 @@ def show_account_users(verbose=False):
     account_resources = {'cpu': 0, 'mem': 0, 'gpu': 0}
 
     for _, row in df.iterrows():
-        account = row["Account"]
+        acc = row["Account"]
         user = row["User"]
         grp_tres_raw = row["GrpTRESRaw"]
         grp_tres_mins = row["GrpTRESMins"]
+
+        if account and acc != account:
+            continue  # Skip if account is specified and does not match
 
         raw_billing_raw = re.search(r'billing=(\d+)', grp_tres_raw)
         mins_billing_raw = re.search(r'billing=(\d+)', grp_tres_mins)
@@ -99,7 +106,7 @@ def show_account_users(verbose=False):
         su_value_raw = int(raw_billing_raw.group(1)) if raw_billing_raw else 0
         total_su = int(mins_billing_raw.group(1)) if mins_billing_raw else 0
 
-        if account != current_account:
+        if acc != current_account:
             if current_account:
                 if su_data:
                     account_usage_percent = (account_total_usage / account_billing_mins) * 100 if account_billing_mins > 0 else 0
@@ -109,8 +116,8 @@ def show_account_users(verbose=False):
                         "", "Total:", f"{account_total_usage}/{account_billing_mins}", f"{account_usage_percent:.2f}%",
                         f"cpu={account_resources['cpu']}, mem={account_resources['mem']}, gpu={account_resources['gpu']}"
                     ])
-            su_data.append([account, "", "", "", ""])
-            current_account = account
+            su_data.append([acc, "", "", "", ""])
+            current_account = acc
             account_billing_raw = 0
             account_billing_mins = total_su
             account_total_usage = 0
@@ -167,19 +174,20 @@ if __name__ == "__main__":
     parser.add_argument("-v", "--verbose", action="store_true", help="Print debug messages")
     parser.add_argument("-V", "--version", action="store_true", help="Print program version")
     parser.add_argument("-d", "--detailed", action="store_true", help="Show detailed account and user association")
+    parser.add_argument("-a", "--account", type=str, required=False, help="Account name to filter results")
 
     args = parser.parse_args()
 
     if args.version:
         get_slurm_usage(version=True)  # Chiamiamo get_slurm_usage con version=True per stampare la versione
     elif args.detailed:
-        show_account_users(verbose=args.verbose)
+        show_account_users(verbose=args.verbose, account=args.account)
     else:
-        result_df = get_slurm_usage(verbose=args.verbose)
+        result_df = get_slurm_usage(verbose=args.verbose, account=args.account)
         if not result_df.empty:
             print(f"{'Account':<15} | {'Allocation(SU)':<15} | {'Remaining(SU)':<15} | {'Used(SU)':<10} | {'Used(%)':<7} |")
             print("-" * 77)
             for index, row in result_df.iterrows():
                 print(f"{index:<15} | {row['Allocation(SU)']:<15.1f} | {row['Remaining(SU)']:<15.1f} | {row['Used(SU)']:<10.1f} | {row['Used(%)']:<7.1f}")
         else:
-            print("Nessun dato disponibile.")
+            print("No data available.")
