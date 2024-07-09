@@ -23,13 +23,13 @@ def parse_sshare_output(output):
 
 def get_slurm_usage(verbose=False, version=False, account=None):
     if version:
-        print("scredits version 1.3.0 by Giulio Librando")
+        print("scredits version 1.3.1 by Giulio Librando")
         return None  # Return None when only version is requested
 
     # Print prune dates
     last_prune, next_prune = read_prune_dates()
     if last_prune and next_prune:
-        print(f"Last credits reset: {last_prune}\nNext credits reset: {next_prune}")
+        print(f"\nLast credits reset: {last_prune}\nNext credits reset: {next_prune}\n")
     else:
         print("Reset dates not found or invalid format.")
     
@@ -83,7 +83,7 @@ def show_account_users(verbose=False, account=None):
     last_prune, next_prune = read_prune_dates()
     
     if last_prune and next_prune:
-        print(f"Last credits reset: {last_prune}\nNext credits reset: {next_prune}")
+        print(f"\nLast credits reset: {last_prune}\nNext credits reset: {next_prune}\n")
     else:
         print("Reset dates not found or invalid format.")
     

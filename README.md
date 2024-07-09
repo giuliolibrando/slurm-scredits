@@ -66,8 +66,10 @@ sacctmgr add user test_user2 set Account=test_account
 Checking balance for all the Accounts
 ```
 [test@localhost ~]$ scredits
+
 Last credits reset: 09/07/2024 00:01
 Next credits reset: 31/07/2024 23:59
+
 Account         | Allocation(SU)  | Remaining(SU)   | Used(SU)   | Used(%) |
 -----------------------------------------------------------------------------
 test_account    | 1000.0          | 1000.0          | 0          | 0.0
@@ -76,8 +78,10 @@ test_account    | 1000.0          | 1000.0          | 0          | 0.0
 If you want more details use the ` -d` flag.
 ```
 [test@localhost ~]$ scredits -d
+
 Last credits reset: 09/07/2024 00:01
 Next credits reset: 31/07/2024 23:59
+
 ------------------------------------------------------------------------------------------
 Account              | User            | Consumed (SU)   | % SU Usage      | Used Resources
 ------------------------------------------------------------------------------------------
@@ -96,8 +100,10 @@ test_account         |                 |                 |                 |
 You can filter for Account with the ` -a` flag
 ```
 [test@localhost ~]$ scredits -d -a test_account
+
 Last credits reset: 09/07/2024 00:01
 Next credits reset: 31/07/2024 23:59
+
 ------------------------------------------------------------------------------------------
 Account              | User            | Consumed (SU)   | % SU Usage      | Used Resources
 ------------------------------------------------------------------------------------------
