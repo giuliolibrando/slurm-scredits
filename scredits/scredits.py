@@ -2,6 +2,8 @@ import subprocess
 import pandas as pd
 import re
 import argparse
+import os
+from datetime import datetime
 
 def parse_sshare_output(output):
     lines = output.strip().split('\n')
@@ -21,9 +23,16 @@ def parse_sshare_output(output):
 
 def get_slurm_usage(verbose=False, version=False, account=None):
     if version:
-        print("scredits version 1.2.0 by Giulio Librando")
+        print("scredits version 1.3.0 by Giulio Librando")
         return None  # Return None when only version is requested
 
+    # Print prune dates
+    last_prune, next_prune = read_prune_dates()
+    if last_prune and next_prune:
+        print(f"Last credits reset: {last_prune}\nNext credits reset: {next_prune}")
+    else:
+        print("Reset dates not found or invalid format.")
+    
     # Execute sshare command
     cmd = ['sshare', '-o', 'account,user,GrpTRESRaw,GrpTRESMins', '-P']
     if verbose:
@@ -71,6 +80,13 @@ def get_slurm_usage(verbose=False, version=False, account=None):
         return pd.DataFrame(columns=["Account", "User", "Allocation(SU)", "Remaining(SU)", "Used(SU)", "Used(%)"])
 
 def show_account_users(verbose=False, account=None):
+    last_prune, next_prune = read_prune_dates()
+    
+    if last_prune and next_prune:
+        print(f"Last credits reset: {last_prune}\nNext credits reset: {next_prune}")
+    else:
+        print("Reset dates not found or invalid format.")
+    
     cmd = ['sshare', '-a', '-o', 'account,user,GrpTRESRaw,GrpTRESMins', '-P']
     if verbose:
         print(f"Executing command: {' '.join(cmd)}")
@@ -165,9 +181,30 @@ def extract_resources(raw_usage):
     resources_str = ", ".join([f"{res[0]}={res[1]}" for res in resources if res[0] in ['cpu', 'mem', 'gpu']])
     return resources_str
 
-
-if __name__ == "__main__":
-    show_account_users(verbose=True)
+def read_prune_dates():
+    last_prune_file = '/etc/scredits/last_prune'
+    next_prune_file = '/etc/scredits/next_prune'
+    date_format = '%Y-%m-%d-%H-%M'
+    
+    last_prune, next_prune = None, None
+    
+    if os.path.exists(last_prune_file):
+        with open(last_prune_file, 'r') as file:
+            date_str = file.read().strip()
+            try:
+                last_prune = datetime.strptime(date_str, date_format).strftime('%d/%m/%Y %H:%M')
+            except ValueError:
+                pass
+    
+    if os.path.exists(next_prune_file):
+        with open(next_prune_file, 'r') as file:
+            date_str = file.read().strip()
+            try:
+                next_prune = datetime.strptime(date_str, date_format).strftime('%d/%m/%Y %H:%M')
+            except ValueError:
+                pass
+    
+    return last_prune, next_prune
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Retrieve and display Slurm usage data.")
@@ -183,6 +220,12 @@ if __name__ == "__main__":
     elif args.detailed:
         show_account_users(verbose=args.verbose, account=args.account)
     else:
+        last_prune, next_prune = read_prune_dates()
+        if last_prune and next_prune:
+            print(f"Last credits reset: {last_prune}\nNext credits reset: {next_prune}")
+        else:
+            print("Reset dates not found or invalid format.")
+            
         result_df = get_slurm_usage(verbose=args.verbose, account=args.account)
         if not result_df.empty:
             print(f"{'Account':<15} | {'Allocation(SU)':<15} | {'Remaining(SU)':<15} | {'Used(SU)':<10} | {'Used(%)':<7} |")
