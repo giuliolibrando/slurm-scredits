@@ -3,6 +3,7 @@ import pandas as pd
 import re
 import argparse
 import os
+import json
 from datetime import datetime
 
 def parse_sshare_output(output):
@@ -23,7 +24,7 @@ def parse_sshare_output(output):
 
 def get_slurm_usage(verbose=False, version=False, account=None):
     if version:
-        print("scredits version 1.3.1 by Giulio Librando")
+        print("scredits version 1.4")
         return None  # Return None when only version is requested
 
     # Print prune dates
@@ -175,6 +176,65 @@ def show_account_users(verbose=False, account=None):
                 print("-" * 90)
         else:
             print(row)  # Print any rows that may have caused issues for debugging purposes
+
+
+def print_json():
+    cmd = ['sshare', '-a', '-o', 'account,user,GrpTRESRaw,GrpTRESMins', '-P']
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    output = result.stdout
+
+    # Converti l'output in un DataFrame
+    df = parse_sshare_output(output)
+
+    balances = []
+    account_totals = {}
+
+    for _, row in df.iterrows():
+        acc = row["Account"]
+        user = row["User"]
+        grp_tres_raw = row["GrpTRESRaw"]
+
+        # Ignora l'account root
+        if acc == "root":
+            continue
+
+        # Se l'utente è vuoto, si tratta della riga di intestazione per l'account
+        if user == "":
+            # Billing consumato
+            consumed_raw = re.search(r'billing=(\d+)', grp_tres_raw)
+            consumed = int(consumed_raw.group(1)) if consumed_raw else 0
+            
+            # Billing totale
+            total_billing_raw = re.search(r'billing=(\d+)$', row["GrpTRESMins"])
+            total_billing = int(total_billing_raw.group(1)) if total_billing_raw else 0
+            
+            # Ignora se il billing totale è zero
+            if total_billing == 0:
+                continue
+            
+            # Calcola il rimanente e memorizza il valore
+            account_totals[acc] = total_billing - consumed  # Calcola il rimanente
+        else:
+            # Aggiungi il valore residuo per ogni utente
+            if acc in account_totals:
+                balances.append({
+                    "user": user.strip(),
+                    "project": acc,
+                    "value": account_totals[acc]
+                })
+
+    # Crea l'output JSON
+    output_json = {
+        "version": 1,
+        "timestamp": int(datetime.now().timestamp()),
+        "config": {
+            "unit": "SU",
+            "project_type": "project"
+        },
+        "balances": balances
+    }
+
+    print(json.dumps(output_json, indent=2))
 
 def extract_resources(raw_usage):
     resources = re.findall(r'(\w+)=(\d+)', raw_usage)

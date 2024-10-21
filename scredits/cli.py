@@ -1,5 +1,5 @@
 import argparse
-from .scredits import get_slurm_usage, show_account_users
+from .scredits import get_slurm_usage, show_account_users, print_json
 
 def main():
     parser = argparse.ArgumentParser(description="Retrieve and display Slurm usage data.")
@@ -7,6 +7,7 @@ def main():
     parser.add_argument("-V", "--version", action="store_true", help="Print program version")
     parser.add_argument("-d", "--detailed", action="store_true", help="Show detailed account and user association")
     parser.add_argument("-a", "--account", type=str, required=False, help="Account name to filter results")
+    parser.add_argument("-j", "--json", action="store_true", help="Print the output in JSON. Compatible with Open Ondemand")
 
     args = parser.parse_args()
 
@@ -14,6 +15,8 @@ def main():
         get_slurm_usage(version=True)  # Chiamiamo get_slurm_usage con version=True per stampare la versione
     elif args.detailed:
         show_account_users(verbose=args.verbose, account=args.account)
+    elif args.json:
+        print_json()
     else:
         result_df = get_slurm_usage(verbose=args.verbose, account=args.account)
         if not result_df.empty:

@@ -1,3 +1,4 @@
+
 # slurm-scredits
 `scredits` is a Slurm utility for checking account balance. The utility calculates the remaining *service units* or *SU* left in the account.
 The utility shows SU as an aggregate of cpu+gpu+mem usage.
@@ -24,6 +25,7 @@ options:
   -d, --detailed        Show detailed account and user association
   -a ACCOUNT, --account ACCOUNT
                         Account name to filter results
+  -j, --json            Print the output in JSON. Compatible with Open Ondemand
 ```
 
 
@@ -114,6 +116,39 @@ test_account         |                 |                 |                 |
                      | Total:          | 0/1000          | 0.00%           | cpu=0, mem=0, gpu=0
 ------------------------------------------------------------------------------------------
 ```
+
+Use the flag --json if you need a json output compatible with [Open OnDemand - Balance Warning](https://osc.github.io/ood-documentation/latest/customizations.html) 
+```
+ root@master1:~/slurm-scredits# scredits --json
+{
+  "version": 1,
+  "timestamp": 1729506306,
+  "config": {
+    "unit": "SU",
+    "project_type": "project"
+  },
+  "balances": [
+    {
+      "user": "userA",
+      "project": "projecA",
+      "value": 792
+    },
+    {
+      "user": "userB",
+      "project": "projectA",
+      "value": 792
+    },
+    {
+      "user": "userA",
+      "project": "projectB",
+      "value": 73445
+    }
+  ]
+}
+```
+
+
+
 **N.B.  "Last credits reset" and "Next credits reset" are shown only if the companion crontab script is enabled**
 
 # Crontab script
@@ -128,7 +163,7 @@ Options:
   -h          Show this help message.
 
 ```
-The script accepts multiple clusters with the -c parameter. 
+The script accepts multiple clusters with the -c parameter.
 
 
 ```
@@ -160,4 +195,3 @@ cd slurm-scredits
 install via pip
 ```
 pip install .
-```
