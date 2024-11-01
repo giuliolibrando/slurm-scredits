@@ -1,3 +1,4 @@
+![PyPI Downloads](https://static.pepy.tech/badge/scredits)
 
 # slurm-scredits
 `scredits` is a Slurm utility for checking account balance. The utility calculates the remaining *service units* or *SU* left in the account.
